@@ -1,0 +1,49 @@
+# Core Framework
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+
+# Database & ORM
+sqlmodel>=0.0.21
+pydantic>=2.8.0
+pydantic-settings>=2.0.0
+alembic>=1.13.0
+asyncpg>=0.29.0  # Async PostgreSQL driver
+aiosqlite>=0.19.0  # Async SQLite driver
+
+# Authentication & Security
+python-jose[cryptography]>=3.3.0  # JWT tokens
+passlib[bcrypt]>=1.7.4  # Password hashing
+argon2-cffi>=23.1.0  # Argon2 password hashing backend
+python-multipart>=0.0.6  # Form data support
+
+# Configuration
+python-dotenv>=1.0.1
+
+# Email validation
+email-validator>=2.1.0
+
+# HTTP Client (for external API calls)
+httpx>=0.25.0
+
+# Rate Limiting
+slowapi>=0.1.9
+
+# Caching & Token Revocation
+redis==5.0.1
+
+# Testing
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+httpx>=0.25.0  # For TestClient
+
+# Development Tools
+black>=23.0.0  # Code formatting
+isort>=5.13.0  # Import sorting
+ruff>=0.1.0  # Linting
+mypy>=1.7.0  # Type checking
+bandit[toml]>=1.7.0  # Security linting
+pre-commit>=3.5.0  # Git hooks
+
+# Monitoring (optional but recommended)
+python-json-logger>=2.0.7  # Structured logging

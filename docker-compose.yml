@@ -1,0 +1,123 @@
+# Docker Compose configuration for production deployment
+# This sets up:
+# - FastAPI application with Redis
+# - PostgreSQL database
+# - Redis (for caching and rate limiting)
+#
+# For development, use docker-compose.dev.yml instead
+
+version: '3.8'
+
+services:
+  # ============= PostgreSQL Database =============
+  db:
+    image: postgres:15-alpine
+    container_name: fastapi_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fastapi_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me_in_production}
+      POSTGRES_DB: fastapi_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastapi_user -d fastapi_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============= Redis (Caching & Rate Limiting) =============
+  redis:
+    image: redis:7-alpine
+    container_name: fastapi_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============= FastAPI Application =============
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Application
+      ENVIRONMENT: development
+      DEBUG: "true"
+
+      # Database
+      DATABASE_URL: postgresql+asyncpg://fastapi_user:${DB_PASSWORD:-change_me_in_production}@db:5432/fastapi_db
+      DB_ECHO: "false"
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 0
+      REDIS_PASSWORD: ""
+
+      # Security
+      SECRET_KEY: dev-secret-key-change-in-production
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+
+      # CORS
+      BACKEND_CORS_ORIGINS: '["http://localhost:3000","http://localhost:8000"]'
+
+      # Logging
+      LOG_LEVEL: INFO
+      LOG_FORMAT: json
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      # Mount source code for hot reload in development
+      - ./app:/app/app
+      - ./logs:/app/logs
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # ============= pgAdmin (Database Management UI) =============
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: fastapi_pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+    name: fastapi_postgres_data
+  redis_data:
+    name: fastapi_redis_data
+  pgadmin_data:
+    name: fastapi_pgadmin_data
+
+networks:
+  default:
+    name: fastapi_network

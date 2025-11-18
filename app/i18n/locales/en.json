@@ -1,0 +1,84 @@
+{
+  "common": {
+    "success": "Success",
+    "error": "Error",
+    "created": "Created successfully",
+    "updated": "Updated successfully",
+    "deleted": "Deleted successfully",
+    "not_found": "Resource not found",
+    "validation_error": "Validation error",
+    "unauthorized": "Unauthorized",
+    "forbidden": "Forbidden",
+    "internal_error": "Internal server error"
+  },
+  "auth": {
+    "login_success": "Login successful",
+    "login_failed": "Invalid email or password",
+    "logout_success": "Logout successful",
+    "token_expired": "Token has expired",
+    "token_invalid": "Invalid token",
+    "email_required": "Email is required",
+    "password_required": "Password is required",
+    "password_min_length": "Password must be at least 8 characters",
+    "account_inactive": "Account is inactive",
+    "account_not_verified": "Account is not verified"
+  },
+  "user": {
+    "user_created": "User created successfully",
+    "user_updated": "User updated successfully",
+    "user_deleted": "User deleted successfully",
+    "user_not_found": "User not found",
+    "email_exists": "Email already exists",
+    "invalid_email": "Invalid email format",
+    "full_name": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "is_active": "Active Status",
+    "avatar_url": "Avatar URL",
+    "roles": "Roles",
+    "permissions": "Permissions"
+  },
+  "role": {
+    "role_created": "Role created successfully",
+    "role_updated": "Role updated successfully",
+    "role_deleted": "Role deleted successfully",
+    "role_not_found": "Role not found",
+    "code_exists": "Role code already exists",
+    "cannot_delete_system_role": "Cannot delete system role",
+    "code": "Code",
+    "name": "Name",
+    "description": "Description",
+    "priority": "Priority",
+    "administrator": "Administrator",
+    "manager": "Manager",
+    "user": "User"
+  },
+  "permission": {
+    "permission_assigned": "Permission assigned successfully",
+    "permission_removed": "Permission removed successfully",
+    "permission_not_found": "Permission not found",
+    "permission_already_assigned": "Permission already assigned",
+    "permission_not_assigned": "Permission not assigned to this role",
+    "code": "Code",
+    "name": "Name",
+    "resource": "Resource",
+    "action": "Action"
+  },
+  "validation": {
+    "required": "This field is required",
+    "invalid_format": "Invalid format",
+    "min_length": "Minimum length is {min}",
+    "max_length": "Maximum length is {max}",
+    "min_value": "Minimum value is {min}",
+    "max_value": "Maximum value is {max}",
+    "invalid_choice": "Invalid choice"
+  },
+  "pagination": {
+    "page": "Page",
+    "total": "Total",
+    "items": "Items",
+    "skip": "Skip",
+    "limit": "Limit",
+    "pages": "Pages"
+  }
+}
