@@ -400,6 +400,60 @@ PERMISSIONS = {
     "AUDIT_READ": ("audit:read", "Read Audit Logs", "audit", "read"),
     "AUDIT_ALL": ("audit:*", "All Audit Permissions", "audit", "*"),
 
+    # Restaurant management permissions
+    "RESTAURANT_CREATE": ("restaurant:create", "Create Restaurant", "restaurant", "create"),
+    "RESTAURANT_READ": ("restaurant:read", "Read Restaurant", "restaurant", "read"),
+    "RESTAURANT_UPDATE": ("restaurant:update", "Update Restaurant", "restaurant", "update"),
+    "RESTAURANT_DELETE": ("restaurant:delete", "Delete Restaurant", "restaurant", "delete"),
+    "RESTAURANT_VERIFY": ("restaurant:verify", "Verify Restaurant", "restaurant", "verify"),
+    "RESTAURANT_ALL": ("restaurant:*", "All Restaurant Permissions", "restaurant", "*"),
+
+    # Supplier management permissions
+    "SUPPLIER_CREATE": ("supplier:create", "Create Supplier", "supplier", "create"),
+    "SUPPLIER_READ": ("supplier:read", "Read Supplier", "supplier", "read"),
+    "SUPPLIER_UPDATE": ("supplier:update", "Update Supplier", "supplier", "update"),
+    "SUPPLIER_DELETE": ("supplier:delete", "Delete Supplier", "supplier", "delete"),
+    "SUPPLIER_VERIFY": ("supplier:verify", "Verify Supplier", "supplier", "verify"),
+    "SUPPLIER_ALL": ("supplier:*", "All Supplier Permissions", "supplier", "*"),
+
+    # Product management permissions
+    "PRODUCT_CREATE": ("product:create", "Create Product", "product", "create"),
+    "PRODUCT_READ": ("product:read", "Read Product", "product", "read"),
+    "PRODUCT_UPDATE": ("product:update", "Update Product", "product", "update"),
+    "PRODUCT_DELETE": ("product:delete", "Delete Product", "product", "delete"),
+    "PRODUCT_ALL": ("product:*", "All Product Permissions", "product", "*"),
+
+    # Order management permissions
+    "ORDER_CREATE": ("order:create", "Create Order", "order", "create"),
+    "ORDER_READ": ("order:read", "Read Order", "order", "read"),
+    "ORDER_UPDATE": ("order:update", "Update Order", "order", "update"),
+    "ORDER_DELETE": ("order:delete", "Delete Order", "order", "delete"),
+    "ORDER_APPROVE": ("order:approve", "Approve Order", "order", "approve"),
+    "ORDER_CANCEL": ("order:cancel", "Cancel Order", "order", "cancel"),
+    "ORDER_ALL": ("order:*", "All Order Permissions", "order", "*"),
+
+    # Delivery management permissions
+    "DELIVERY_CREATE": ("delivery:create", "Create Delivery", "delivery", "create"),
+    "DELIVERY_READ": ("delivery:read", "Read Delivery", "delivery", "read"),
+    "DELIVERY_UPDATE": ("delivery:update", "Update Delivery", "delivery", "update"),
+    "DELIVERY_ASSIGN": ("delivery:assign", "Assign Delivery to Driver", "delivery", "assign"),
+    "DELIVERY_COMPLETE": ("delivery:complete", "Complete Delivery", "delivery", "complete"),
+    "DELIVERY_ALL": ("delivery:*", "All Delivery Permissions", "delivery", "*"),
+
+    # Review management permissions
+    "REVIEW_CREATE": ("review:create", "Create Review", "review", "create"),
+    "REVIEW_READ": ("review:read", "Read Review", "review", "read"),
+    "REVIEW_UPDATE": ("review:update", "Update Review", "review", "update"),
+    "REVIEW_DELETE": ("review:delete", "Delete Review", "review", "delete"),
+    "REVIEW_ALL": ("review:*", "All Review Permissions", "review", "*"),
+
+    # Payment management permissions
+    "PAYMENT_CREATE": ("payment:create", "Create Payment", "payment", "create"),
+    "PAYMENT_READ": ("payment:read", "Read Payment", "payment", "read"),
+    "PAYMENT_UPDATE": ("payment:update", "Update Payment", "payment", "update"),
+    "PAYMENT_VERIFY": ("payment:verify", "Verify Payment", "payment", "verify"),
+    "PAYMENT_ALL": ("payment:*", "All Payment Permissions", "payment", "*"),
+
     # System-wide permissions
     "SYSTEM_ADMIN": ("*:*", "System Administrator", "*", "*"),
     "SYSTEM_READ_ALL": ("*:read", "Read All Resources", "*", "read"),
@@ -413,13 +467,24 @@ PERMISSIONS = {
 # "PRODUCT_ALL": ("product:*", "All Product Permissions", "product", "*"),
 
 # Predefined Role Constants
-# Format: ("code", "name", "description")
+# Format: ("code", "name", "description", priority)
+# Priority: 1 = highest (admin), higher numbers = lower priority
 ROLES = {
-    "ADMIN": ("admin", "Administrator", "Full system access with all permissions"),
-    "MANAGER": ("manager", "Manager", "Can manage users and assign roles"),
-    "USER": ("user", "User", "Standard user with basic access"),
-}
+    "ADMIN": ("admin", "Administrator", "Full system access with all permissions", 1),
+    "MANAGER": ("manager", "Manager", "Can manage users and assign roles", 2),
 
-# Example: Add more roles as needed for your application
-# "MODERATOR": ("moderator", "Moderator", "Can moderate content and users"),
-# "VIEWER": ("viewer", "Viewer", "Read-only access to resources"),
+    # Supply Chain Roles
+    "RESTAURANT_OWNER": ("restaurant_owner", "Restaurant Owner", "Owner of a restaurant, can manage restaurant profile and staff", 5),
+    "RESTAURANT_MANAGER": ("restaurant_manager", "Restaurant Manager", "Restaurant manager, can create orders and manage inventory", 6),
+    "RESTAURANT_STAFF": ("restaurant_staff", "Restaurant Staff", "Restaurant staff member with basic access", 7),
+
+    "SUPPLIER_ADMIN": ("supplier_admin", "Supplier Administrator", "Administrator of a supplier company, full control over products and orders", 5),
+    "SUPPLIER_MANAGER": ("supplier_manager", "Supplier Manager", "Supplier manager, can manage products and fulfill orders", 6),
+    "SUPPLIER_STAFF": ("supplier_staff", "Supplier Staff", "Supplier staff member with limited access", 7),
+
+    "DRIVER": ("driver", "Delivery Driver", "Delivery driver, can view and update delivery status", 8),
+    "ACCOUNTANT": ("accountant", "Accountant", "Financial staff, can view orders and manage payments", 6),
+
+    # Basic user role
+    "USER": ("user", "User", "Standard user with basic access", 10),
+}

@@ -12,6 +12,7 @@ Why separate User from other models?
 
 from typing import Optional, List, TYPE_CHECKING
 from uuid import UUID, uuid4
+from datetime import datetime
 from sqlmodel import Field, Relationship, SQLModel
 from pydantic import EmailStr
 
@@ -20,8 +21,8 @@ from app.models.base import BaseModel
 # Avoid circular imports
 if TYPE_CHECKING:
     from app.models.role import Role
-    # Add your custom model imports here if needed:
-    # from app.models.product import Product
+    from app.models.restaurant import Restaurant
+    from app.models.supplier import Supplier
 
 
 class UserRole(SQLModel, table=True):
@@ -119,16 +120,54 @@ class User(BaseModel, table=True):
         nullable=False,
         description="User's full name",
     )
+
+    # Phone & Verification (Extended for Supply Chain)
+    phone_number: Optional[str] = Field(
+        default=None,
+        max_length=20,
+        nullable=True,
+        unique=True,
+        index=True,
+        description="User's phone number in E.164 format (e.g., +9647901234567)",
+        sa_column_kwargs={"unique": True},
+    )
+    phone_verified: bool = Field(
+        default=False,
+        nullable=False,
+        description="Whether phone number has been verified via SMS OTP",
+    )
+    phone_verified_at: Optional[datetime] = Field(
+        default=None,
+        nullable=True,
+        description="Timestamp when phone was verified",
+    )
+
+    # Legacy phone field (kept for backward compatibility, can be deprecated)
     phone: Optional[str] = Field(
         default=None,
         max_length=20,
         nullable=True,
-        description="User's phone number",
+        description="Legacy phone field (use phone_number instead)",
     )
+
     avatar_url: Optional[str] = Field(
         default=None,
         nullable=True,
         description="URL to user's profile picture",
+    )
+
+    # Preferences (Supply Chain)
+    language_preference: str = Field(
+        default="ar",
+        max_length=5,
+        nullable=False,
+        description="User's preferred language (ar, en, ku)",
+    )
+    currency: str = Field(
+        default="IQD",
+        max_length=3,
+        nullable=False,
+        description="User's preferred currency (IQD, USD)",
     )
 
     # Status Fields
@@ -142,6 +181,27 @@ class User(BaseModel, table=True):
         default=False,
         nullable=False,
         description="Whether user's email has been verified",
+    )
+    email_verified_at: Optional[datetime] = Field(
+        default=None,
+        nullable=True,
+        description="Timestamp when email was verified",
+    )
+
+    # Supply Chain Relationships (Foreign keys to restaurant and supplier tables)
+    restaurant_id: Optional[UUID] = Field(
+        default=None,
+        foreign_key="restaurant.id",
+        nullable=True,
+        index=True,
+        description="Restaurant ID if user is restaurant staff",
+    )
+    supplier_id: Optional[UUID] = Field(
+        default=None,
+        foreign_key="supplier.id",
+        nullable=True,
+        index=True,
+        description="Supplier ID if user is supplier staff",
     )
 
     # Optional: Password reset
@@ -167,15 +227,23 @@ class User(BaseModel, table=True):
         }
     )
 
-    # Optional: Add custom relationships to your domain models here
-    # Example:
-    # customer_profile: Optional["Customer"] = Relationship(
-    #     back_populates="user",
-    #     sa_relationship_kwargs={
-    #         "uselist": False,  # One-to-one
-    #         "foreign_keys": "[Customer.user_id]",
-    #     },
-    # )
+    # Supply Chain Relationships
+    restaurant: Optional["Restaurant"] = Relationship(
+        back_populates="staff",
+        sa_relationship_kwargs={
+            "uselist": False,  # One-to-one (user belongs to one restaurant)
+            "foreign_keys": "[User.restaurant_id]",
+            "lazy": "selectin",
+        },
+    )
+    supplier: Optional["Supplier"] = Relationship(
+        back_populates="staff",
+        sa_relationship_kwargs={
+            "uselist": False,  # One-to-one (user belongs to one supplier)
+            "foreign_keys": "[User.supplier_id]",
+            "lazy": "selectin",
+        },
+    )
 
     def __repr__(self) -> str:
         """String representation for debugging."""

@@ -28,6 +28,12 @@ from app.models.role import (
     PERMISSIONS,
     ROLES,
 )
+
+# Supply Chain models (must be imported before User due to relationships)
+from app.models.restaurant import Restaurant
+from app.models.supplier import Supplier
+
+# User model (must be after Restaurant and Supplier due to foreign keys)
 from app.models.user import User, UserRole
 
 # Add your custom domain models here:
@@ -49,6 +55,9 @@ __all__ = [
     "UserRole",
     "PERMISSIONS",
     "ROLES",
+    # Supply Chain models
+    "Restaurant",
+    "Supplier",
     # Add your custom models to __all__ here:
     # "Product",
     # "Order",

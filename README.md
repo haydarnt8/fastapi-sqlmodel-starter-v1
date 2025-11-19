@@ -7,6 +7,17 @@ A production-grade FastAPI starter template with authentication, RBAC, audit log
 [![SQLModel](https://img.shields.io/badge/SQLModel-latest-orange.svg)](https://sqlmodel.tiangolo.com)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
+## Restaurant Supply Chain Project
+
+This starter is being extended to build a **Restaurant Supply Chain Ordering System** for the Iraqi market. See the complete product documentation:
+
+- **[Product Requirements Document (PRD)](docs/PRD_RESTAURANT_SUPPLY_CHAIN.md)** - Complete product vision and requirements
+- **[Work Breakdown Structure](docs/WORK_BREAKDOWN.md)** - Detailed phase-by-phase task breakdown (3 phases × 4 weeks each)
+- **[Feature Mapping](docs/FEATURE_MAPPING.md)** - How existing features map to new requirements
+- **[Database Schema](docs/DATABASE_SCHEMA_SUPPLY_CHAIN.md)** - Complete database design with SQL
+- **[Implementation Roadmap](docs/IMPLEMENTATION_ROADMAP.md)** - 12-week sprint-by-sprint plan
+- **[Quick Start Guide](docs/QUICK_START_SUPPLY_CHAIN.md)** - Developer onboarding (30 minutes)
+
 ## Features
 
 ### Core Features

@@ -90,24 +90,78 @@ async def create_roles(
     logger.info("Creating roles...")
     role_map = {}
 
-    # Define role permissions
-    # Add your custom role permissions here based on your domain
+    # Define role permissions for each role
     role_permissions = {
         "admin": ["*:*"],  # All permissions
-        # Example custom role permissions:
-        # "teacher": [
-        #     "student:*",
-        #     "subject:*",
-        #     "grade:*",
-        # ],
-        # "manager": [
-        #     "product:*",
-        #     "order:read",
-        #     "order:update",
-        # ],
+        "manager": [
+            "user:read", "user:update",
+            "role:read", "role:assign",
+            "restaurant:verify", "supplier:verify",
+            "audit:read",
+        ],
+        # Restaurant roles
+        "restaurant_owner": [
+            "restaurant:read", "restaurant:update",
+            "product:read",
+            "order:create", "order:read", "order:update", "order:cancel",
+            "delivery:read",
+            "payment:read", "payment:create",
+            "review:read", "review:create",
+        ],
+        "restaurant_manager": [
+            "restaurant:read",
+            "product:read",
+            "order:create", "order:read", "order:update",
+            "delivery:read",
+            "payment:read",
+            "review:read",
+        ],
+        "restaurant_staff": [
+            "restaurant:read",
+            "product:read",
+            "order:read",
+            "delivery:read",
+        ],
+        # Supplier roles
+        "supplier_admin": [
+            "supplier:read", "supplier:update",
+            "product:*",  # Full product management
+            "order:read", "order:update", "order:approve",
+            "delivery:create", "delivery:read", "delivery:update", "delivery:assign",
+            "payment:read", "payment:create",
+            "review:read",
+        ],
+        "supplier_manager": [
+            "supplier:read",
+            "product:create", "product:read", "product:update",
+            "order:read", "order:update", "order:approve",
+            "delivery:read", "delivery:update",
+            "payment:read",
+            "review:read",
+        ],
+        "supplier_staff": [
+            "supplier:read",
+            "product:read",
+            "order:read",
+            "delivery:read",
+        ],
+        # Other roles
+        "driver": [
+            "delivery:read", "delivery:update", "delivery:complete",
+            "order:read",
+        ],
+        "accountant": [
+            "order:read",
+            "payment:*",
+            "restaurant:read",
+            "supplier:read",
+        ],
+        "user": [
+            "user:read",  # Can read own profile
+        ],
     }
 
-    for role_key, (code, name, description) in ROLES.items():
+    for role_key, (code, name, description, priority) in ROLES.items():
         # Check if role already exists
         result = await session.execute(
             select(Role).where(Role.code == code)
@@ -118,17 +172,12 @@ async def create_roles(
             role = existing
             logger.debug(f"Role already exists: {code}")
         else:
-            # Create new role with hierarchy (1 = highest/strongest)
-            role_priorities = {
-                "admin": 1,        # Highest - full system access
-                "manager": 5,      # Can manage users
-                "user": 10,        # Standard users
-            }
+            # Create new role with hierarchy (1 = highest/strongest, higher numbers = lower priority)
             role = Role(
                 code=code,
                 name=name,
                 description=description,
-                priority=role_priorities.get(code, 999),  # Default: weakest
+                priority=priority,
             )
             session.add(role)
             await session.flush()  # Get ID assigned

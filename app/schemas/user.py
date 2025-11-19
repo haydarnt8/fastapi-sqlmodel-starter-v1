@@ -35,11 +35,29 @@ class UserBase(BaseModel):
         description="User's full name",
         examples=["John Doe"],
     )
+    phone_number: Optional[str] = Field(
+        default=None,
+        max_length=20,
+        description="User's phone number in E.164 format",
+        examples=["+9647901234567"],
+    )
     phone: Optional[str] = Field(
         default=None,
         max_length=20,
-        description="User's phone number",
+        description="Legacy phone field",
         examples=["+1234567890"],
+    )
+    language_preference: str = Field(
+        default="ar",
+        max_length=5,
+        description="User's preferred language (ar, en, ku)",
+        examples=["ar"],
+    )
+    currency: str = Field(
+        default="IQD",
+        max_length=3,
+        description="User's preferred currency",
+        examples=["IQD"],
     )
 
 # ============= Create Schemas =============
@@ -134,8 +152,13 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     full_name: Optional[str] = Field(default=None, min_length=2, max_length=255)
     phone: Optional[str] = Field(default=None, max_length=20)
+    phone_number: Optional[str] = Field(default=None, max_length=20)
+    language_preference: Optional[str] = Field(default=None, max_length=5)
+    currency: Optional[str] = Field(default=None, max_length=3)
     is_active: Optional[bool] = None
     avatar_url: Optional[str] = None
+    restaurant_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None
 
 class UserUpdatePassword(BaseModel):
     """
@@ -187,9 +210,14 @@ class UserRead(UserBase):
     id: UUID
     is_active: bool
     is_verified: bool
+    phone_verified: bool = False
     avatar_url: Optional[str] = None
+    restaurant_id: Optional[UUID] = None
+    supplier_id: Optional[UUID] = None
     created_at: datetime
     updated_at: datetime
+    email_verified_at: Optional[datetime] = None
+    phone_verified_at: Optional[datetime] = None
     roles: List[RoleInfo] = Field(default_factory=list)
 
 class UserProfile(UserRead):
