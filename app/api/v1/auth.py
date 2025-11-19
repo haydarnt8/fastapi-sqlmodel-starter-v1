@@ -50,6 +50,7 @@ async def register(
     Register a new user account.
 
     Anyone can register (no authentication required).
+    New users automatically get the "User" role assigned.
     New users are NOT superusers by default.
 
     Request Body:
@@ -59,7 +60,7 @@ async def register(
     - phone: Optional phone number
 
     Returns:
-    - Created user profile (without hashed password!)
+    - Created user profile with "User" role assigned
 
     Errors:
     - 409: Email already registered
@@ -68,13 +69,23 @@ async def register(
     try:
         # Create user (user_crud checks for duplicate email)
         from app.schemas.user import UserCreate
+        from app.models.role import Role
+        from sqlalchemy import select
 
+        # Get the default "User" role
+        result = await session.execute(
+            select(Role).where(Role.code == "user")
+        )
+        user_role = result.scalar_one_or_none()
+
+        # Create user with default "User" role
         user_create = UserCreate(
             email=user_data.email,
             password=user_data.password,
             full_name=user_data.full_name,
             phone=user_data.phone,
             is_active=True,
+            role_ids=[user_role.id] if user_role else None,
         )
 
         user = await user_crud.create(session, obj_in=user_create)

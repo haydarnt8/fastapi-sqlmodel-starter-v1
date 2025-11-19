@@ -131,6 +131,13 @@ The system uses **JWT (JSON Web Tokens)** for stateless authentication:
   "phone": "+964 771 234 5678",
   "is_active": true,
   "is_superuser": false,
+  "roles": [
+    {
+      "id": "role-uuid-here",
+      "code": "user",
+      "name": "User"
+    }
+  ],
   "created_at": "2024-11-19T10:00:00Z"
 }
 ```
@@ -140,6 +147,7 @@ The system uses **JWT (JSON Web Tokens)** for stateless authentication:
 - Password validated for strength
 - Account is active immediately (`is_active=true`)
 - Not a superuser by default (`is_superuser=false`)
+- **Automatically assigned "User" role** with basic permissions
 - Phone number is optional
 
 ---

@@ -158,6 +158,11 @@ async def create_roles(
         ],
         "user": [
             "user:read",  # Can read own profile
+            "restaurant:create",  # Can register as restaurant owner
+            "supplier:create",  # Can register as supplier owner
+            "product:read",  # Can browse product catalog
+            "restaurant:read",  # Can view restaurant listings
+            "supplier:read",  # Can view supplier listings
         ],
     }
 
