@@ -17,6 +17,7 @@ from app.models.base import BaseModel
 
 if TYPE_CHECKING:
     from app.models.user import User
+    from app.models.product import Product
 
 
 class Supplier(BaseModel, table=True):
@@ -334,6 +335,14 @@ class Supplier(BaseModel, table=True):
             "foreign_keys": "[Supplier.verified_by_id]",
             "lazy": "joined",
         }
+    )
+
+    products: List["Product"] = Relationship(
+        back_populates="supplier",
+        sa_relationship_kwargs={
+            "lazy": "selectin",
+            "cascade": "all, delete-orphan",
+        },
     )
 
     # =========================================================================

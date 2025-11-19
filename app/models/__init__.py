@@ -32,13 +32,11 @@ from app.models.role import (
 # Supply Chain models (must be imported before User due to relationships)
 from app.models.restaurant import Restaurant
 from app.models.supplier import Supplier
+from app.models.product import Product
+from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
 
 # User model (must be after Restaurant and Supplier due to foreign keys)
 from app.models.user import User, UserRole
-
-# Add your custom domain models here:
-# from app.models.product import Product
-# from app.models.order import Order
 
 __all__ = [
     # Base
@@ -58,7 +56,9 @@ __all__ = [
     # Supply Chain models
     "Restaurant",
     "Supplier",
-    # Add your custom models to __all__ here:
-    # "Product",
-    # "Order",
+    "Product",
+    "Order",
+    "OrderItem",
+    "OrderStatus",
+    "PaymentStatus",
 ]
