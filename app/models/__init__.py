@@ -34,6 +34,7 @@ from app.models.restaurant import Restaurant
 from app.models.supplier import Supplier
 from app.models.product import Product
 from app.models.order import Order, OrderItem, OrderStatus, PaymentStatus
+from app.models.delivery import Delivery, DeliveryStatus, DeliveryPriority
 
 # User model (must be after Restaurant and Supplier due to foreign keys)
 from app.models.user import User, UserRole
@@ -61,4 +62,7 @@ __all__ = [
     "OrderItem",
     "OrderStatus",
     "PaymentStatus",
+    "Delivery",
+    "DeliveryStatus",
+    "DeliveryPriority",
 ]

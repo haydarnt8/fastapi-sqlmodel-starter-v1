@@ -5,7 +5,7 @@ Combines all v1 endpoints into a single router.
 """
 from fastapi import APIRouter
 
-from app.api.v1 import auth, users, roles, audit, restaurants, suppliers, products, orders
+from app.api.v1 import auth, users, roles, audit, restaurants, suppliers, products, orders, deliveries
 
 # Create API v1 router
 api_router = APIRouter()
@@ -21,6 +21,7 @@ api_router.include_router(restaurants.router)
 api_router.include_router(suppliers.router)
 api_router.include_router(products.router)
 api_router.include_router(orders.router)
+api_router.include_router(deliveries.router)
 
 # Add your custom domain-specific routers here:
 # from app.api.v1 import products

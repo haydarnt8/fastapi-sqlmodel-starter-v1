@@ -41,6 +41,7 @@ if TYPE_CHECKING:
     from app.models.restaurant import Restaurant
     from app.models.supplier import Supplier
     from app.models.product import Product
+    from app.models.delivery import Delivery
 
 
 class OrderStatus(str, Enum):
@@ -366,6 +367,13 @@ class Order(BaseModel, table=True):
         sa_relationship_kwargs={
             "foreign_keys": "[Order.confirmed_by_id]",
             "lazy": "joined",
+        }
+    )
+
+    deliveries: List["Delivery"] = Relationship(
+        back_populates="order",
+        sa_relationship_kwargs={
+            "lazy": "selectin",
         }
     )
 

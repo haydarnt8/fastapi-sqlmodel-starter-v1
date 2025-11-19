@@ -436,6 +436,7 @@ PERMISSIONS = {
     "DELIVERY_CREATE": ("delivery:create", "Create Delivery", "delivery", "create"),
     "DELIVERY_READ": ("delivery:read", "Read Delivery", "delivery", "read"),
     "DELIVERY_UPDATE": ("delivery:update", "Update Delivery", "delivery", "update"),
+    "DELIVERY_DELETE": ("delivery:delete", "Delete Delivery", "delivery", "delete"),
     "DELIVERY_ASSIGN": ("delivery:assign", "Assign Delivery to Driver", "delivery", "assign"),
     "DELIVERY_COMPLETE": ("delivery:complete", "Complete Delivery", "delivery", "complete"),
     "DELIVERY_ALL": ("delivery:*", "All Delivery Permissions", "delivery", "*"),
