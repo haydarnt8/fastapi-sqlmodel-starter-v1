@@ -47,6 +47,23 @@ class Settings(BaseSettings):
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
 
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        """
+        Convert Render PostgreSQL URL format to SQLAlchemy async format.
+
+        Render provides: postgres://user:pass@host:port/db
+        We need: postgresql+asyncpg://user:pass@host:port/db
+        """
+        if v.startswith("postgres://"):
+            # Render uses postgres:// but we need postgresql+asyncpg://
+            v = v.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif v.startswith("postgresql://"):
+            # Some providers use postgresql:// - convert to async
+            v = v.replace("postgresql://", "postgresql+asyncpg://", 1)
+        return v
+
     # Security
     SECRET_KEY: str = "CHANGE-ME-IN-PRODUCTION-USE-CRYPTOGRAPHICALLY-SECURE-KEY"
     ALGORITHM: str = "HS256"
@@ -165,7 +182,14 @@ class Settings(BaseSettings):
     @property
     def database_url_sync(self) -> str:
         """Get synchronous database URL (for Alembic migrations)."""
-        return self.DATABASE_URL.replace("+aiosqlite", "").replace("+asyncpg", "")
+        url = self.DATABASE_URL
+        # Remove async drivers
+        url = url.replace("+aiosqlite", "")
+        url = url.replace("+asyncpg", "")
+        # Ensure postgresql uses psycopg2 (sync driver)
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+psycopg2://", 1)
+        return url
 
 
 # Singleton instance
