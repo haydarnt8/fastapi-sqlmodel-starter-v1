@@ -8,9 +8,13 @@ migration failures when the database is still starting up.
 """
 
 import asyncio
+import os
 import sys
 import time
 from typing import Optional
+
+# Add parent directory to path so we can import app module
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 import asyncpg
 from sqlalchemy.ext.asyncio import create_async_engine
