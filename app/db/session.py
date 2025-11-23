@@ -163,21 +163,21 @@ async def init_db() -> None:
                 # Get database type from URL
                 database_url = str(settings.DATABASE_URL)
                 if "postgresql" in database_url:
-                    # Query ALL custom indexes (starting with 'ix_') and drop them dynamically
-                    logger.info("Querying all custom indexes...")
+                    # Query ALL custom indexes across ALL schemas and drop them
+                    logger.info("Querying all custom indexes across all schemas...")
                     result = await conn.execute(text("""
-                        SELECT indexname
+                        SELECT schemaname, indexname
                         FROM pg_indexes
-                        WHERE schemaname = 'public'
-                        AND indexname LIKE 'ix_%'
+                        WHERE indexname LIKE 'ix_%'
+                        ORDER BY schemaname, indexname
                     """))
-                    indexes = [row[0] for row in result.fetchall()]
+                    indexes_with_schema = [(row[0], row[1]) for row in result.fetchall()]
 
-                    if indexes:
-                        logger.info(f"Found {len(indexes)} custom indexes to drop: {indexes}")
-                        for index_name in indexes:
-                            await conn.execute(text(f"DROP INDEX IF EXISTS {index_name} CASCADE"))
-                        logger.info(f"Dropped {len(indexes)} custom indexes")
+                    if indexes_with_schema:
+                        logger.info(f"Found {len(indexes_with_schema)} custom indexes to drop: {indexes_with_schema}")
+                        for schema_name, index_name in indexes_with_schema:
+                            await conn.execute(text(f"DROP INDEX IF EXISTS {schema_name}.{index_name} CASCADE"))
+                        logger.info(f"Dropped {len(indexes_with_schema)} custom indexes")
                     else:
                         logger.info("No custom indexes found to drop")
             except Exception as index_error:
