@@ -19,6 +19,7 @@ Performance Example:
 """
 
 from typing import AsyncGenerator
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
 from sqlalchemy.exc import ProgrammingError
@@ -140,6 +141,21 @@ async def init_db() -> None:
         # Add your custom domain models here:
         # from app.models.product import Product
         # from app.models.order import Order
+
+        # Check if tables already exist to avoid race conditions with multiple workers
+        async with engine.begin() as conn:
+            # Check if the user table exists (as a proxy for schema initialization)
+            result = await conn.execute(
+                text(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables "
+                    "WHERE table_schema = 'public' AND table_name = 'user')"
+                )
+            )
+            tables_exist = result.scalar()
+
+            if tables_exist:
+                logger.info("Database tables already exist, skipping creation")
+                return
 
         # Create all tables
         # Wrap transaction in try-except to handle duplicate table/index errors
