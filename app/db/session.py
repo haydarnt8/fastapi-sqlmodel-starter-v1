@@ -160,35 +160,20 @@ async def init_db() -> None:
         if missing_tables:
             logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
 
-            # CRITICAL FIX: Drop all indexes manually BEFORE dropping tables
-            # This prevents "index already exists" errors on PostgreSQL
+            # NUCLEAR OPTION: Drop and recreate entire public schema
+            # This ensures NO orphaned objects remain (tables, indexes, constraints, etc.)
             try:
                 # Get database type from URL
                 database_url = str(settings.DATABASE_URL)
                 if "postgresql" in database_url:
-                    # Query ALL custom indexes across ALL schemas and drop them
-                    logger.info("Querying all custom indexes across all schemas...")
-                    result = await conn.execute(text("""
-                        SELECT schemaname, indexname
-                        FROM pg_indexes
-                        WHERE indexname LIKE 'ix_%'
-                        ORDER BY schemaname, indexname
-                    """))
-                    indexes_with_schema = [(row[0], row[1]) for row in result.fetchall()]
-
-                    if indexes_with_schema:
-                        logger.info(f"Found {len(indexes_with_schema)} custom indexes to drop: {indexes_with_schema}")
-                        for schema_name, index_name in indexes_with_schema:
-                            await conn.execute(text(f"DROP INDEX IF EXISTS {schema_name}.{index_name} CASCADE"))
-                        logger.info(f"Dropped {len(indexes_with_schema)} custom indexes")
-                    else:
-                        logger.info("No custom indexes found to drop")
-            except Exception as index_error:
-                logger.warning(f"Error dropping indexes (may not exist): {index_error}")
-
-            # Drop all existing tables to ensure clean state
-            await conn.run_sync(SQLModel.metadata.drop_all)
-            logger.info("Dropped all existing tables for clean recreation")
+                    logger.info("Dropping and recreating public schema (nuclear option)...")
+                    await conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+                    await conn.execute(text("CREATE SCHEMA public"))
+                    await conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
+                    logger.info("Public schema recreated successfully")
+            except Exception as schema_error:
+                logger.error(f"Error recreating schema: {schema_error}")
+                raise
             # Create all tables immediately in SAME transaction
             # NO checkfirst since we just dropped everything!
             await conn.run_sync(SQLModel.metadata.create_all)
