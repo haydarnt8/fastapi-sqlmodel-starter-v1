@@ -27,6 +27,8 @@ venv/
 ENV/
 env/
 .env
+.env.*
+.env.railway
 
 # IDEs
 .vscode/

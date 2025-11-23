@@ -27,8 +27,9 @@ USER appuser
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
 
-# Run migrations and start server
-CMD alembic upgrade head && \
+# Run database health check, migrations, and start server
+CMD python scripts/wait_for_db.py && \
+    alembic upgrade head && \
     gunicorn app.main:app \
     --workers 2 \
     --worker-class uvicorn.workers.UvicornWorker \

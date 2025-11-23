@@ -62,75 +62,100 @@ You'll see build logs. This takes ~2-3 minutes.
 
 ## Step 3: Add PostgreSQL Database (1 minute)
 
-### 3.1 Add Database Service
+### 3.1 Add Database Service - DO THIS FIRST
+
+**IMPORTANT:** You must add PostgreSQL BEFORE configuring environment variables!
 
 1. In your project dashboard, click **"+ New"**
 2. Select **"Database"**
 3. Choose **"Add PostgreSQL"**
 4. Railway creates a free PostgreSQL database!
+5. Wait for the database to be ready (status: "Active")
 
-### 3.2 Link Database to Your App
+### 3.2 Verify Database is Created
 
-Railway automatically creates a `DATABASE_URL` variable. But we need to ensure it's in the correct format:
+You should see two services in your project:
 
-1. Click on your **FastAPI service** (not the database)
-2. Go to **"Variables"** tab
-3. You should see `DATABASE_URL` already there
-4. If it starts with `postgres://`, we need to change it to `postgresql://`:
-   - Click on `DATABASE_URL`
-   - Change the value from `postgres://...` to `postgresql://...`
-   - Or add a new variable: `DATABASE_URL` = `postgresql://${{Postgres.POSTGRES_URL}}`
+- **fastapi-sqlmodel-starter-v1** (your app)
+- **Postgres** (your database)
 
 ---
 
-## Step 4: Configure Environment Variables (1 minute)
+## Step 4: Configure Environment Variables (2 minutes)
 
-### 4.1 Click on Your Service
+### 4.1 Use the Auto-Generator Script (Recommended)
 
-In the project dashboard, click on your **FastAPI application** service.
+The easiest way to generate all required environment variables:
 
-### 4.2 Go to Variables Tab
-
-Click **"Variables"** in the top menu.
-
-### 4.3 Add Required Variables
-
-Click **"+ New Variable"** for each:
-
-**SECRET_KEY:**
 ```bash
-# Generate locally and paste the result:
-python -c "import secrets; print(secrets.token_hex(32))"
+# In your local project directory
+python generate_env_vars.py
 ```
 
-**FIRST_SUPERUSER_EMAIL:**
-```
-admin@example.com
+This will:
+
+- Generate a secure SECRET_KEY
+- Create all required variables
+- Save them to `.env.railway` file
+- Show you exactly what to paste into Railway
+
+### 4.2 Manual Configuration (Alternative)
+
+If you prefer to add variables manually:
+
+1. Click on your **FastAPI service** (not the database)
+2. Go to **"Variables"** tab
+3. Click **"Raw Editor"** button (top right)
+4. Paste this entire configuration:
+
+```bash
+# Database - CRITICAL: Use Railway's template variable
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+
+# Application Settings
+ENVIRONMENT=production
+DEBUG=false
+RELOAD=false
+
+# Security - Generate with: python -c "import secrets; print(secrets.token_hex(32))"
+SECRET_KEY=<paste-generated-key-here>
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+REFRESH_TOKEN_EXPIRE_DAYS=7
+
+# Admin User - CHANGE THESE!
+FIRST_SUPERUSER_EMAIL=admin@example.com
+FIRST_SUPERUSER_PASSWORD=YourSecurePassword123!
+
+# Redis - Disabled (no Redis service yet)
+REDIS_ENABLED=false
+
+# Rate Limiting
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_PER_MINUTE=60
+
+# CORS - Update with your frontend URL
+BACKEND_CORS_ORIGINS=["https://your-frontend.com"]
+
+# Logging
+LOG_LEVEL=INFO
+LOG_FORMAT=json
 ```
 
-**FIRST_SUPERUSER_PASSWORD:**
+Then click **"Update Variables"**
+
+### 4.3 Critical: Verify DATABASE_URL
+
+**IMPORTANT:** Make sure `DATABASE_URL` is set to:
 ```
-YourSecurePassword123!
+${{Postgres.DATABASE_URL}}
 ```
 
-**ENVIRONMENT:**
-```
-production
-```
+NOT a hardcoded URL! The `${{...}}` syntax tells Railway to use the database connection string.
 
-**REDIS_ENABLED:**
-```
-false
-```
+### 4.4 Railway Will Redeploy
 
-**BACKEND_CORS_ORIGINS** (optional, if you have a frontend):
-```
-["https://yourdomain.com"]
-```
-
-### 4.4 Save Variables
-
-Railway automatically redeploys when you add/change variables!
+After saving variables, Railway automatically redeploys your app with the new configuration!
 
 ---
 
