@@ -156,6 +156,24 @@ async def init_db() -> None:
 
         if missing_tables:
             logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
+
+            # CRITICAL FIX: Drop all indexes manually BEFORE dropping tables
+            # This prevents "index already exists" errors on PostgreSQL
+            try:
+                # Get database type from URL
+                database_url = str(settings.DATABASE_URL)
+                if "postgresql" in database_url:
+                    # Drop all custom indexes explicitly
+                    logger.info("Dropping all custom indexes...")
+                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_restaurant_status CASCADE"))
+                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_supplier_status CASCADE"))
+                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_status_submitted CASCADE"))
+                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_payment_status CASCADE"))
+                    await conn.execute(text("DROP INDEX IF EXISTS ix_orderitem_order_product CASCADE"))
+                    logger.info("Dropped all custom indexes")
+            except Exception as index_error:
+                logger.warning(f"Error dropping indexes (may not exist): {index_error}")
+
             # Drop all existing tables to ensure clean state
             await conn.run_sync(SQLModel.metadata.drop_all)
             logger.info("Dropped all existing tables for clean recreation")
