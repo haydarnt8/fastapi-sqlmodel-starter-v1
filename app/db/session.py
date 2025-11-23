@@ -148,6 +148,8 @@ async def init_db() -> None:
     # Use SQLAlchemy's inspector which works across all database backends
     from sqlalchemy import inspect
 
+    # Check if tables exist
+    needs_recreation = False
     async with engine.begin() as conn:
         # Use inspector to check if ALL core tables exist
         tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
@@ -159,28 +161,28 @@ async def init_db() -> None:
 
         if missing_tables:
             logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
+            needs_recreation = True
 
             # NUCLEAR OPTION: Drop and recreate entire public schema
             # This ensures NO orphaned objects remain (tables, indexes, constraints, etc.)
-            try:
-                # Get database type from URL
-                database_url = str(settings.DATABASE_URL)
-                if "postgresql" in database_url:
-                    logger.info("Dropping and recreating public schema (nuclear option)...")
-                    await conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
-                    await conn.execute(text("CREATE SCHEMA public"))
-                    await conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
-                    logger.info("Public schema recreated successfully")
-            except Exception as schema_error:
-                logger.error(f"Error recreating schema: {schema_error}")
-                raise
-            # Create all tables immediately in SAME transaction
-            # NO checkfirst since we just dropped everything!
-            await conn.run_sync(SQLModel.metadata.create_all)
-            logger.info("Database initialized successfully")
-            return
+            database_url = str(settings.DATABASE_URL)
+            if "postgresql" in database_url:
+                logger.info("Dropping and recreating public schema (nuclear option)...")
+                await conn.execute(text("DROP SCHEMA IF EXISTS public CASCADE"))
+                await conn.execute(text("CREATE SCHEMA public"))
+                await conn.execute(text("GRANT ALL ON SCHEMA public TO public"))
+                logger.info("Public schema recreated successfully")
         elif required_tables.issubset(existing_tables):
             logger.info("All required database tables exist, skipping creation")
+            return
+
+    # CRITICAL: Create tables in a NEW transaction AFTER schema drop is committed
+    # This prevents "already exists" errors from cached metadata
+    if needs_recreation:
+        async with engine.begin() as conn:
+            logger.info("Creating all database tables...")
+            await conn.run_sync(SQLModel.metadata.create_all)
+            logger.info("Database initialized successfully")
             return
 
     # If we get here, no tables exist at all - create them with duplicate protection
