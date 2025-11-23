@@ -135,9 +135,12 @@ async def main():
         print()
         sys.exit(1)
 
+    database_url = str(settings.DATABASE_URL)
+    scheme = database_url.split("://")[0] if "://" in database_url else "unknown"
+
     print(f"✅ Database configuration is valid")
     print(f"   Environment: {settings.ENVIRONMENT}")
-    print(f"   Database: {settings.DATABASE_URL.scheme}")
+    print(f"   Database: {scheme}")
     print()
 
     # Wait for database to be ready
