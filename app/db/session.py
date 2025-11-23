@@ -21,6 +21,7 @@ Performance Example:
 from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
+from sqlalchemy.exc import ProgrammingError
 from sqlmodel import SQLModel
 
 from app.core.config import settings
@@ -151,19 +152,25 @@ async def init_db() -> None:
 
                 # Create all tables if they don't exist
                 await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
-        except Exception as create_error:
-            # Ignore duplicate table/index errors (happens with concurrent workers or redeployments)
+        except ProgrammingError as create_error:
+            # Catch PostgreSQL duplicate object errors specifically
             error_msg = str(create_error).lower()
             if "already exists" in error_msg or "duplicate" in error_msg:
-                logger.warning(f"Some database objects already exist (this is normal on redeployment): {create_error}")
+                logger.warning(
+                    "Database objects already exist (normal on redeployment with multiple workers). "
+                    "Skipping table creation."
+                )
+                # Continue without raising - this is expected with concurrent workers
             else:
-                # Re-raise if it's not a duplicate error
+                # Re-raise if it's a different ProgrammingError
+                logger.error(f"Database programming error during initialization: {create_error}", exc_info=True)
                 raise
+        except Exception as create_error:
+            # Catch any other unexpected errors
+            logger.error(f"Unexpected error during database initialization: {create_error}", exc_info=True)
+            raise
 
         logger.info("Database initialized successfully")
-    except Exception as e:
-        logger.error(f"Failed to initialize database: {e}", exc_info=True)
-        raise
 
 
 async def close_db() -> None:
