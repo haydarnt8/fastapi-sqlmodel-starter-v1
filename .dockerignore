@@ -1,0 +1,78 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.hypothesis/
+
+# Development
+.env
+.env.*
+!.env.production.example
+*.db
+*.db-shm
+*.db-wal
+dev.db*
+test.db*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+docs/
+*.md
+!QUICKSTART_*.md
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Deployment configs for other platforms
+render.yaml
+docker-compose.yml
+kubernetes/
+
+# Logs
+*.log
+logs/
+
+# Other
+.dockerignore
+Dockerfile
