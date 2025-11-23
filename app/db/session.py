@@ -147,8 +147,17 @@ async def init_db() -> None:
             # await conn.run_sync(SQLModel.metadata.drop_all)
 
             # Create all tables if they don't exist
-            # checkfirst=True prevents errors if tables/indexes already exist
-            await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
+            # Wrap in try-except to handle duplicate table/index errors gracefully
+            try:
+                await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
+            except Exception as create_error:
+                # Ignore duplicate table/index errors (happens with concurrent workers or redeployments)
+                error_msg = str(create_error).lower()
+                if "already exists" in error_msg or "duplicate" in error_msg:
+                    logger.warning(f"Some database objects already exist (this is normal on redeployment)")
+                else:
+                    # Re-raise if it's not a duplicate error
+                    raise
 
         logger.info("Database initialized successfully")
     except Exception as e:
