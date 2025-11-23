@@ -22,7 +22,7 @@ from typing import AsyncGenerator
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.pool import NullPool
-from sqlalchemy.exc import ProgrammingError
+from sqlalchemy.exc import ProgrammingError, OperationalError
 from sqlmodel import SQLModel
 
 from app.core.config import settings
@@ -123,70 +123,68 @@ async def init_db() -> None:
     - Testing
     - Quick prototypes
     """
+    logger.info("Initializing database...")
+
+    # Import all models to ensure they're registered with SQLModel
+    # This must happen before create_all()
+    # IMPORTANT: Import ALL table models including junction tables
+    from app.models import (
+        User,
+        Role,
+        Permission,
+        UserRole,
+        RolePermission,
+    )
+    # Import AuditLog after User to resolve foreign key
+    from app.models.audit_log import AuditLog  # noqa: F401
+    # Add your custom domain models here:
+    # from app.models.product import Product
+    # from app.models.order import Order
+
+    # Check if tables already exist to avoid race conditions with multiple workers
+    # Use SQLAlchemy's inspector which works across all database backends
+    from sqlalchemy import inspect
+    async with engine.begin() as conn:
+        # Use inspector to check if user table exists
+        inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
+        tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
+
+        if "user" in tables:
+            logger.info("Database tables already exist, skipping creation")
+            return
+
+    # Create all tables
+    # Wrap transaction in try-except to handle duplicate table/index errors
+    # This can happen with concurrent Gunicorn workers or Railway redeployments
     try:
-        logger.info("Initializing database...")
-
-        # Import all models to ensure they're registered with SQLModel
-        # This must happen before create_all()
-        # IMPORTANT: Import ALL table models including junction tables
-        from app.models import (
-            User,
-            Role,
-            Permission,
-            UserRole,
-            RolePermission,
-        )
-        # Import AuditLog after User to resolve foreign key
-        from app.models.audit_log import AuditLog  # noqa: F401
-        # Add your custom domain models here:
-        # from app.models.product import Product
-        # from app.models.order import Order
-
-        # Check if tables already exist to avoid race conditions with multiple workers
         async with engine.begin() as conn:
-            # Check if the user table exists (as a proxy for schema initialization)
-            result = await conn.execute(
-                text(
-                    "SELECT EXISTS (SELECT FROM information_schema.tables "
-                    "WHERE table_schema = 'public' AND table_name = 'user')"
-                )
+            # Drop all tables (ONLY for development!)
+            # Comment this out in production!
+            # await conn.run_sync(SQLModel.metadata.drop_all)
+
+            # Create all tables if they don't exist
+            await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
+    except (ProgrammingError, OperationalError) as create_error:
+        # Catch duplicate object errors from both PostgreSQL and SQLite
+        # PostgreSQL: ProgrammingError with DuplicateTableError
+        # SQLite: OperationalError for duplicate tables/indexes
+        error_msg = str(create_error).lower()
+        if "already exists" in error_msg or "duplicate" in error_msg:
+            logger.warning(
+                "Database objects already exist (normal on redeployment with multiple workers). "
+                "Skipping table creation."
             )
-            tables_exist = result.scalar()
-
-            if tables_exist:
-                logger.info("Database tables already exist, skipping creation")
-                return
-
-        # Create all tables
-        # Wrap transaction in try-except to handle duplicate table/index errors
-        # This can happen with concurrent Gunicorn workers or Railway redeployments
-        try:
-            async with engine.begin() as conn:
-                # Drop all tables (ONLY for development!)
-                # Comment this out in production!
-                # await conn.run_sync(SQLModel.metadata.drop_all)
-
-                # Create all tables if they don't exist
-                await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
-        except ProgrammingError as create_error:
-            # Catch PostgreSQL duplicate object errors specifically
-            error_msg = str(create_error).lower()
-            if "already exists" in error_msg or "duplicate" in error_msg:
-                logger.warning(
-                    "Database objects already exist (normal on redeployment with multiple workers). "
-                    "Skipping table creation."
-                )
-                # Continue without raising - this is expected with concurrent workers
-            else:
-                # Re-raise if it's a different ProgrammingError
-                logger.error(f"Database programming error during initialization: {create_error}", exc_info=True)
-                raise
-        except Exception as create_error:
-            # Catch any other unexpected errors
-            logger.error(f"Unexpected error during database initialization: {create_error}", exc_info=True)
+            # Continue without raising - this is expected with concurrent workers
+        else:
+            # Re-raise if it's a different error
+            logger.error(f"Database error during initialization: {create_error}", exc_info=True)
             raise
+    except Exception as create_error:
+        # Catch any other unexpected errors
+        logger.error(f"Unexpected error during database initialization: {create_error}", exc_info=True)
+        raise
 
-        logger.info("Database initialized successfully")
+    logger.info("Database initialized successfully")
 
 
 async def close_db() -> None:
