@@ -138,8 +138,11 @@ async def init_db() -> None:
     # Import AuditLog after User to resolve foreign key
     from app.models.audit_log import AuditLog  # noqa: F401
     # Add your custom domain models here:
-    # from app.models.product import Product
-    # from app.models.order import Order
+    from app.models.product import Product  # noqa: F401
+    from app.models.order import Order, OrderItem  # noqa: F401
+    from app.models.restaurant import Restaurant  # noqa: F401
+    from app.models.supplier import Supplier  # noqa: F401
+    from app.models.delivery import Delivery  # noqa: F401
 
     # Check if ALL required tables exist to avoid race conditions with multiple workers
     # Use SQLAlchemy's inspector which works across all database backends
