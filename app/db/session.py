@@ -145,31 +145,32 @@ async def init_db() -> None:
     # Use SQLAlchemy's inspector which works across all database backends
     from sqlalchemy import inspect
 
-    # Do drop and create in SAME transaction to avoid race conditions
+    async with engine.begin() as conn:
+        # Use inspector to check if ALL core tables exist
+        tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
+
+        # Check for core tables - if ANY are missing, recreate all
+        required_tables = {"user", "role", "permission", "user_role", "role_permission"}
+        existing_tables = set(tables)
+        missing_tables = required_tables - existing_tables
+
+        if missing_tables:
+            logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
+            # Drop all existing tables to ensure clean state
+            await conn.run_sync(SQLModel.metadata.drop_all)
+            logger.info("Dropped all existing tables for clean recreation")
+            # Create all tables immediately in SAME transaction
+            # NO checkfirst since we just dropped everything!
+            await conn.run_sync(SQLModel.metadata.create_all)
+            logger.info("Database initialized successfully")
+            return
+        elif required_tables.issubset(existing_tables):
+            logger.info("All required database tables exist, skipping creation")
+            return
+
+    # If we get here, no tables exist at all - create them with duplicate protection
     try:
         async with engine.begin() as conn:
-            # Use inspector to check if ALL core tables exist
-            tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
-
-            # Check for core tables - if ANY are missing, recreate all
-            required_tables = {"user", "role", "permission", "user_role", "role_permission"}
-            existing_tables = set(tables)
-            missing_tables = required_tables - existing_tables
-
-            if missing_tables:
-                logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
-                # Drop all existing tables to ensure clean state
-                await conn.run_sync(SQLModel.metadata.drop_all)
-                logger.info("Dropped all existing tables for clean recreation")
-                # Create all tables immediately in SAME transaction
-                await conn.run_sync(SQLModel.metadata.create_all)
-                logger.info("Database initialized successfully")
-                return
-            elif required_tables.issubset(existing_tables):
-                logger.info("All required database tables exist, skipping creation")
-                return
-
-            # If we get here, no tables exist at all - create them
             await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
             logger.info("Database initialized successfully")
     except (ProgrammingError, OperationalError) as create_error:
