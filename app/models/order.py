@@ -602,5 +602,5 @@ class OrderItem(BaseModel, table=True):
 Index("ix_order_restaurant_status", Order.restaurant_id, Order.status)
 Index("ix_order_supplier_status", Order.supplier_id, Order.status)
 Index("ix_order_status_submitted", Order.status, Order.submitted_at)
-Index("ix_order_payment_status", Order.payment_status, Order.payment_due_date)
+Index("ix_order_payment_status_v2", Order.payment_status, Order.payment_due_date)  # v2 to avoid Alembic conflicts
 Index("ix_orderitem_order_product", OrderItem.order_id, OrderItem.product_id)
