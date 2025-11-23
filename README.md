@@ -535,7 +535,11 @@ REDIS_PASSWORD=your-redis-password
 - [ ] Configure backup strategy
 - [ ] Review security headers for your use case
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for detailed deployment guide.
+See deployment guides:
+
+- [Production Deployment Guide](docs/DEPLOYMENT.md) - Docker, Kubernetes, traditional servers
+- [Railway Deployment](docs/QUICKSTART_RAILWAY.md) - $5 free credit, best performance
+- [Replit Deployment](docs/QUICKSTART_REPLIT.md) - 100% FREE, no credit card required
 
 ## Customization
 
