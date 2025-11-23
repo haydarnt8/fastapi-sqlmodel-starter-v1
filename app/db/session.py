@@ -163,14 +163,23 @@ async def init_db() -> None:
                 # Get database type from URL
                 database_url = str(settings.DATABASE_URL)
                 if "postgresql" in database_url:
-                    # Drop all custom indexes explicitly
-                    logger.info("Dropping all custom indexes...")
-                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_restaurant_status CASCADE"))
-                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_supplier_status CASCADE"))
-                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_status_submitted CASCADE"))
-                    await conn.execute(text("DROP INDEX IF EXISTS ix_order_payment_status CASCADE"))
-                    await conn.execute(text("DROP INDEX IF EXISTS ix_orderitem_order_product CASCADE"))
-                    logger.info("Dropped all custom indexes")
+                    # Query ALL custom indexes (starting with 'ix_') and drop them dynamically
+                    logger.info("Querying all custom indexes...")
+                    result = await conn.execute(text("""
+                        SELECT indexname
+                        FROM pg_indexes
+                        WHERE schemaname = 'public'
+                        AND indexname LIKE 'ix_%'
+                    """))
+                    indexes = [row[0] for row in result.fetchall()]
+
+                    if indexes:
+                        logger.info(f"Found {len(indexes)} custom indexes to drop: {indexes}")
+                        for index_name in indexes:
+                            await conn.execute(text(f"DROP INDEX IF EXISTS {index_name} CASCADE"))
+                        logger.info(f"Dropped {len(indexes)} custom indexes")
+                    else:
+                        logger.info("No custom indexes found to drop")
             except Exception as index_error:
                 logger.warning(f"Error dropping indexes (may not exist): {index_error}")
 
