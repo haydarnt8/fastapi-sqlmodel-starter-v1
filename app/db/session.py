@@ -141,15 +141,25 @@ async def init_db() -> None:
     # from app.models.product import Product
     # from app.models.order import Order
 
-    # Check if tables already exist to avoid race conditions with multiple workers
+    # Check if ALL required tables exist to avoid race conditions with multiple workers
     # Use SQLAlchemy's inspector which works across all database backends
     from sqlalchemy import inspect
     async with engine.begin() as conn:
-        # Use inspector to check if user table exists
+        # Use inspector to check if ALL core tables exist
         tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
 
-        if "user" in tables:
-            logger.info("Database tables already exist, skipping creation")
+        # Check for core tables - if ANY are missing, recreate all
+        required_tables = {"user", "role", "permission", "user_role", "role_permission"}
+        existing_tables = set(tables)
+        missing_tables = required_tables - existing_tables
+
+        if missing_tables:
+            logger.warning(f"Missing tables detected: {missing_tables}. Recreating schema...")
+            # Drop all existing tables to ensure clean state
+            await conn.run_sync(SQLModel.metadata.drop_all)
+            logger.info("Dropped all existing tables for clean recreation")
+        elif required_tables.issubset(existing_tables):
+            logger.info("All required database tables exist, skipping creation")
             return
 
     # Create all tables
