@@ -32,8 +32,9 @@ EXPOSE 8000
 
 # Run database health check and start server
 # Note: Tables are created automatically by SQLModel on first run
+# Using 1 worker to avoid race conditions during database initialization
 CMD python scripts/wait_for_db.py && \
     gunicorn app.main:app \
-    --workers 2 \
+    --workers 1 \
     --worker-class uvicorn.workers.UvicornWorker \
     --bind 0.0.0.0:${PORT:-8000}

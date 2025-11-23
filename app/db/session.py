@@ -146,7 +146,6 @@ async def init_db() -> None:
     from sqlalchemy import inspect
     async with engine.begin() as conn:
         # Use inspector to check if user table exists
-        inspector = await conn.run_sync(lambda sync_conn: inspect(sync_conn))
         tables = await conn.run_sync(lambda sync_conn: inspect(sync_conn).get_table_names())
 
         if "user" in tables:
