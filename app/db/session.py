@@ -147,7 +147,8 @@ async def init_db() -> None:
             # await conn.run_sync(SQLModel.metadata.drop_all)
 
             # Create all tables if they don't exist
-            await conn.run_sync(SQLModel.metadata.create_all)
+            # checkfirst=True prevents errors if tables/indexes already exist
+            await conn.run_sync(SQLModel.metadata.create_all, checkfirst=True)
 
         logger.info("Database initialized successfully")
     except Exception as e:
