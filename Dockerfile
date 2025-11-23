@@ -30,9 +30,9 @@ USER appuser
 # Expose port (Railway will override with $PORT)
 EXPOSE 8000
 
-# Run database health check, migrations, and start server
+# Run database health check and start server
+# Note: Tables are created automatically by SQLModel on first run
 CMD python scripts/wait_for_db.py && \
-    alembic upgrade head && \
     gunicorn app.main:app \
     --workers 2 \
     --worker-class uvicorn.workers.UvicornWorker \
